@@ -4,7 +4,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { WeatherData } from "@/lib/types";
-import { ThermometerSun, Sunrise, Sunset, Gauge, Wind, Droplets, Eye } from "lucide-react";
+import { ThermometerSun, Sunrise, Sunset, Gauge, Wind, Droplets, Eye, Cloudy } from "lucide-react";
 
 interface WeatherDetailsProps {
   data: WeatherData;
@@ -32,12 +32,13 @@ const DetailItem = ({ icon, label, value }: { icon: React.ReactNode, label: stri
 export function WeatherDetails({ data }: WeatherDetailsProps) {
   const details = [
     { icon: <ThermometerSun size={24} />, label: "Sensación Térmica", value: `${Math.round(data.feels_like)}°C` },
-    { icon: <Sunrise size={24} />, label: "Amanecer", value: formatTime(data.sunrise, data.timezone) },
-    { icon: <Sunset size={24} />, label: "Atardecer", value: formatTime(data.sunset, data.timezone) },
     { icon: <Droplets size={24} />, label: "Humedad", value: `${data.humidity}%` },
     { icon: <Wind size={24} />, label: "Viento", value: `${(data.windSpeed * 3.6).toFixed(1)} km/h` },
+    { icon: <Cloudy size={24} />, label: "Nubosidad", value: `${data.cloudiness}%` },
     { icon: <Gauge size={24} />, label: "Presión", value: `${data.pressure} hPa` },
     { icon: <Eye size={24} />, label: "Visibilidad", value: `${(data.visibility / 1000).toFixed(1)} km` },
+    { icon: <Sunrise size={24} />, label: "Amanecer", value: formatTime(data.sunrise, data.timezone) },
+    { icon: <Sunset size={24} />, label: "Atardecer", value: formatTime(data.sunset, data.timezone) },
   ]
   return (
     <Card className="w-full animate-in fade-in-50 duration-700">
@@ -45,7 +46,7 @@ export function WeatherDetails({ data }: WeatherDetailsProps) {
         <CardTitle>Detalles del Clima</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {details.map(item => <DetailItem key={item.label} {...item} />)}
         </div>
       </CardContent>
@@ -60,8 +61,8 @@ export function WeatherDetailsSkeleton() {
         <Skeleton className="h-7 w-48" />
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {Array.from({ length: 7 }).map((_, index) => (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, index) => (
              <div key={index} className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
                 <Skeleton className="h-6 w-6 rounded-full" />
                 <div className="space-y-2">

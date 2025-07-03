@@ -26,10 +26,10 @@ const generateMockHourly = (baseTemp: number): HourlyData[] => {
 }
 
 const mockWeatherData: Record<string, Omit<WeatherData, "city">> = {
-  london: { temperature: 15, description: "Nubes Dispersas", icon: "Clouds", humidity: 77, windSpeed: 4.6, isDay: true, forecast: generateMockForecast(15), dt: Math.floor(Date.now() / 1000), timezone: 3600, feels_like: 14, pressure: 1012, visibility: 10000, sunrise: Date.now() / 1000 - 3600 * 5, sunset: Date.now() / 1000 + 3600 * 5, hourly: generateMockHourly(15) },
-  paris: { temperature: 22, description: "Cielo Despejado", icon: "Clear", humidity: 60, windSpeed: 3.1, isDay: true, forecast: generateMockForecast(22), dt: Math.floor(Date.now() / 1000), timezone: 7200, feels_like: 22, pressure: 1015, visibility: 10000, sunrise: Date.now() / 1000 - 3600 * 5, sunset: Date.now() / 1000 + 3600 * 5, hourly: generateMockHourly(22) },
-  tokyo: { temperature: 28, description: "Lluvia Ligera", icon: "Rain", humidity: 85, windSpeed: 2.5, isDay: false, forecast: generateMockForecast(28), dt: Math.floor(Date.now() / 1000), timezone: 32400, feels_like: 31, pressure: 1008, visibility: 8000, sunrise: Date.now() / 1000 - 3600 * 5, sunset: Date.now() / 1000 + 3600 * 5, hourly: generateMockHourly(28) },
-  "new york": { temperature: 25, description: "Pocas Nubes", icon: "Clouds", humidity: 55, windSpeed: 5.8, isDay: true, forecast: generateMockForecast(25), dt: Math.floor(Date.now() / 1000), timezone: -14400, feels_like: 26, pressure: 1018, visibility: 10000, sunrise: Date.now() / 1000 - 3600 * 5, sunset: Date.now() / 1000 + 3600 * 5, hourly: generateMockHourly(25) },
+  london: { temperature: 15, description: "Nubes Dispersas", icon: "Clouds", humidity: 77, windSpeed: 4.6, isDay: true, forecast: generateMockForecast(15), dt: Math.floor(Date.now() / 1000), timezone: 3600, feels_like: 14, pressure: 1012, visibility: 10000, sunrise: Date.now() / 1000 - 3600 * 5, sunset: Date.now() / 1000 + 3600 * 5, hourly: generateMockHourly(15), cloudiness: 80 },
+  paris: { temperature: 22, description: "Cielo Despejado", icon: "Clear", humidity: 60, windSpeed: 3.1, isDay: true, forecast: generateMockForecast(22), dt: Math.floor(Date.now() / 1000), timezone: 7200, feels_like: 22, pressure: 1015, visibility: 10000, sunrise: Date.now() / 1000 - 3600 * 5, sunset: Date.now() / 1000 + 3600 * 5, hourly: generateMockHourly(22), cloudiness: 10 },
+  tokyo: { temperature: 28, description: "Lluvia Ligera", icon: "Rain", humidity: 85, windSpeed: 2.5, isDay: false, forecast: generateMockForecast(28), dt: Math.floor(Date.now() / 1000), timezone: 32400, feels_like: 31, pressure: 1008, visibility: 8000, sunrise: Date.now() / 1000 - 3600 * 5, sunset: Date.now() / 1000 + 3600 * 5, hourly: generateMockHourly(28), cloudiness: 90 },
+  "new york": { temperature: 25, description: "Pocas Nubes", icon: "Clouds", humidity: 55, windSpeed: 5.8, isDay: true, forecast: generateMockForecast(25), dt: Math.floor(Date.now() / 1000), timezone: -14400, feels_like: 26, pressure: 1018, visibility: 10000, sunrise: Date.now() / 1000 - 3600 * 5, sunset: Date.now() / 1000 + 3600 * 5, hourly: generateMockHourly(25), cloudiness: 40 },
 };
 
 async function getMockWeather(city: string): Promise<{ data: WeatherData | null; error: string | null }> {
@@ -149,6 +149,7 @@ async function fetchWeatherData(params: URLSearchParams): Promise<{ data: Weathe
             sunrise: weatherData.sys.sunrise,
             sunset: weatherData.sys.sunset,
             hourly: hourlyForecast,
+            cloudiness: weatherData.clouds.all,
         };
 
         return { data, error: null };

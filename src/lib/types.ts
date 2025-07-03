@@ -28,6 +28,7 @@ export interface WeatherData {
   sunrise: number;
   sunset: number;
   hourly: HourlyData[];
+  cloudiness: number;
 }
 
 export interface CitySuggestion {
