@@ -15,10 +15,10 @@ const generateMockForecast = (baseTemp: number): DailyForecast[] => {
 };
 
 const mockWeatherData: Record<string, Omit<WeatherData, "city">> = {
-  london: { temperature: 15, description: "Nubes Dispersas", icon: "Clouds", humidity: 77, windSpeed: 4.6, isDay: true, forecast: generateMockForecast(15) },
-  paris: { temperature: 22, description: "Cielo Despejado", icon: "Clear", humidity: 60, windSpeed: 3.1, isDay: true, forecast: generateMockForecast(22) },
-  tokyo: { temperature: 28, description: "Lluvia Ligera", icon: "Rain", humidity: 85, windSpeed: 2.5, isDay: false, forecast: generateMockForecast(28) },
-  "new york": { temperature: 25, description: "Pocas Nubes", icon: "Clouds", humidity: 55, windSpeed: 5.8, isDay: true, forecast: generateMockForecast(25) },
+  london: { temperature: 15, description: "Nubes Dispersas", icon: "Clouds", humidity: 77, windSpeed: 4.6, isDay: true, forecast: generateMockForecast(15), dt: Math.floor(Date.now() / 1000), timezone: 3600 },
+  paris: { temperature: 22, description: "Cielo Despejado", icon: "Clear", humidity: 60, windSpeed: 3.1, isDay: true, forecast: generateMockForecast(22), dt: Math.floor(Date.now() / 1000), timezone: 7200 },
+  tokyo: { temperature: 28, description: "Lluvia Ligera", icon: "Rain", humidity: 85, windSpeed: 2.5, isDay: false, forecast: generateMockForecast(28), dt: Math.floor(Date.now() / 1000), timezone: 32400 },
+  "new york": { temperature: 25, description: "Pocas Nubes", icon: "Clouds", humidity: 55, windSpeed: 5.8, isDay: true, forecast: generateMockForecast(25), dt: Math.floor(Date.now() / 1000), timezone: -14400 },
 };
 
 async function getMockWeather(city: string): Promise<{ data: WeatherData | null; error: string | null }> {
@@ -118,6 +118,8 @@ async function fetchWeatherData(params: URLSearchParams): Promise<{ data: Weathe
             icon: weatherData.weather[0].main,
             isDay: isDay,
             forecast: dailyForecasts,
+            dt: weatherData.dt,
+            timezone: weatherData.timezone,
         };
 
         return { data, error: null };

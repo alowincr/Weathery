@@ -15,6 +15,8 @@ export interface WeatherData {
   icon: string;
   isDay: boolean;
   forecast: DailyForecast[];
+  dt: number;
+  timezone: number;
 }
 
 export interface CitySuggestion {
