@@ -100,30 +100,22 @@ export async function getWeather(city: string): Promise<{ data: WeatherData | nu
     // Fetch current weather
     const weatherResponse = await fetch(`${BASE_URL}/weather?${new URLSearchParams(apiParams).toString()}`);
     if (!weatherResponse.ok) {
-      if (weatherResponse.status === 404) {
-        throw new Error(`Weather data not found for "${city}".`);
-      }
-      try {
-        const errorData = await weatherResponse.json();
-        // OpenWeatherMap error messages can be unhelpful, so we'll add a prefix.
-        const message = errorData.message ? `API Error: ${errorData.message}` : 'Failed to fetch current weather.';
-        throw new Error(message);
-      } catch (e) {
-        throw new Error('Failed to fetch current weather.');
-      }
+        if (weatherResponse.status === 401) {
+            throw new Error('Invalid API key. Please check your .env.local file. It may take a few hours for a new key to activate.');
+        }
+        if (weatherResponse.status === 404) {
+            throw new Error(`Weather data not found for "${city}".`);
+        }
+        const errorData = await weatherResponse.json().catch(() => null);
+        throw new Error(errorData?.message || `Failed to fetch current weather. Status: ${weatherResponse.status}`);
     }
     const weatherData = await weatherResponse.json();
 
     // Fetch 5-day forecast
     const forecastResponse = await fetch(`${BASE_URL}/forecast?${new URLSearchParams(apiParams).toString()}`);
      if (!forecastResponse.ok) {
-        try {
-            const errorData = await forecastResponse.json();
-            const message = errorData.message ? `API Error: ${errorData.message}` : 'Failed to fetch forecast data.';
-            throw new Error(message);
-        } catch(e) {
-            throw new Error('Failed to fetch forecast data.');
-        }
+        const errorData = await forecastResponse.json().catch(() => null);
+        throw new Error(errorData?.message || `Failed to fetch forecast data. Status: ${forecastResponse.status}`);
     }
     const forecastData = await forecastResponse.json();
 
@@ -133,7 +125,7 @@ export async function getWeather(city: string): Promise<{ data: WeatherData | nu
     
     for (const forecast of forecastData.list) {
       const date = new Date(forecast.dt * 1000);
-      const dayKey = date.toISOString().split('T')[0]; // Use YYYY-MM-DD for uniqueness
+      const dayKey = date.toISOString().split('T')[0];
 
       if (!seenDays.has(dayKey) && dailyForecasts.length < 5) {
         seenDays.add(dayKey);
@@ -159,10 +151,6 @@ export async function getWeather(city: string): Promise<{ data: WeatherData | nu
     return { data, error: null };
   } catch (error: any) {
     console.error("OpenWeatherMap API error:", error);
-    // Add a check for a common API key issue.
-    if (error.message && error.message.toLowerCase().includes("invalid api key")) {
-        return { data: null, error: "Invalid API key. Please check your .env.local file. It may also take a few hours for a new key to become active." };
-    }
     return { data: null, error: error.message || "An unknown error occurred." };
   }
 }
