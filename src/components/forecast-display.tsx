@@ -16,10 +16,10 @@ export function ForecastDisplay({ forecast }: ForecastDisplayProps) {
         <CardTitle>Pronóstico para 5 días</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 md:gap-4">
+        <div className="flex gap-2 overflow-x-auto pb-2 md:grid md:grid-cols-5 md:gap-4 md:overflow-visible md:pb-0">
           {forecast.map((dayForecast, index) => (
-            <div key={index} className="flex flex-col items-center justify-center space-y-2 flex-1 rounded-lg bg-background p-3 text-center transition-colors hover:bg-accent/50">
-              <span className="text-sm font-medium text-muted-foreground">{dayForecast.day.replace('.', '')}</span>
+            <div key={index} className="flex flex-col items-center justify-center space-y-2 flex-shrink-0 w-28 rounded-lg bg-background p-3 text-center transition-colors hover:bg-accent/50 md:w-auto">
+              <span className="text-sm font-medium capitalize text-muted-foreground">{dayForecast.day.replace('.', '')}</span>
               <WeatherIcon icon={dayForecast.icon} className="h-10 w-10 text-primary" />
               <div className="font-bold">
                 <span>{Math.round(dayForecast.temp_max)}°</span>

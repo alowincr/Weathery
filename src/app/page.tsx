@@ -186,7 +186,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-background text-foreground transition-colors duration-500 lg:flex-row">
+    <div className="flex min-h-screen w-full flex-col bg-transparent text-foreground transition-colors duration-500 lg:flex-row">
       <aside className="w-full shrink-0 space-y-6 border-b bg-card p-4 lg:w-96 lg:border-b-0 lg:border-r">
         <div className="space-y-2">
             <h1 className="font-headline text-3xl font-bold tracking-tight text-primary">
