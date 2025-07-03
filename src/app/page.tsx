@@ -264,19 +264,15 @@ export default function Home() {
             <>
               <WeatherCardSkeleton />
               <ForecastDisplaySkeleton />
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                <HourlyForecastSkeleton />
-                <WeatherDetailsSkeleton />
-              </div>
+              <HourlyForecastSkeleton />
+              <WeatherDetailsSkeleton />
             </>
           ) : weatherData ? (
             <>
               <WeatherCard data={weatherData} />
               <ForecastDisplay forecast={weatherData.forecast} />
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                 <HourlyForecast data={weatherData.hourly} />
-                 <WeatherDetails data={weatherData} />
-              </div>
+              <HourlyForecast data={weatherData.hourly} />
+              <WeatherDetails data={weatherData} />
             </>
           ) : error ? (
             <div className="flex h-[60vh] flex-col items-center justify-center rounded-lg border-2 border-dashed bg-card p-8 text-center">

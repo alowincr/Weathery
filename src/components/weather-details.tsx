@@ -46,7 +46,7 @@ export function WeatherDetails({ data }: WeatherDetailsProps) {
         <CardTitle>Detalles del Clima</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {details.map(item => <DetailItem key={item.label} {...item} />)}
         </div>
       </CardContent>
@@ -61,7 +61,7 @@ export function WeatherDetailsSkeleton() {
         <Skeleton className="h-7 w-48" />
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {Array.from({ length: 8 }).map((_, index) => (
              <div key={index} className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
                 <Skeleton className="h-6 w-6 rounded-full" />
