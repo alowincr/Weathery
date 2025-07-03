@@ -1,6 +1,8 @@
 "use client";
 
 import { Droplets, Wind, Clock } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
+import { es } from "date-fns/locale";
 import {
   Card,
   CardContent,
@@ -37,9 +39,12 @@ export function WeatherCard({ data }: WeatherCardProps) {
       <CardHeader className="text-center">
         <CardTitle className="text-4xl font-bold">{data.city}</CardTitle>
         <CardDescription className="text-lg capitalize">{data.description}</CardDescription>
-        <div className="flex items-center justify-center gap-2 pt-2 text-sm text-muted-foreground">
-            <Clock className="h-4 w-4" />
-            <span>{getLocalTime(data.dt, data.timezone)}</span>
+        <div className="flex flex-col items-center justify-center gap-1 pt-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                <span>{getLocalTime(data.dt, data.timezone)}</span>
+            </div>
+            <p className="text-xs">(Actualizado {formatDistanceToNow(new Date(data.dt * 1000), { addSuffix: true, locale: es })})</p>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -56,7 +61,7 @@ export function WeatherCard({ data }: WeatherCardProps) {
           </div>
           <div className="flex items-center justify-center gap-2 rounded-lg bg-background p-3 transition-colors hover:bg-accent/50">
             <Wind className="h-5 w-5 text-primary" />
-            <span>Viento: {data.windSpeed} m/s</span>
+            <span>Viento: {(data.windSpeed * 3.6).toFixed(1)} km/h</span>
           </div>
         </div>
       </CardContent>
