@@ -54,7 +54,7 @@ async function getMockWeather(city: string): Promise<{ data: WeatherData | null;
 // --- OpenWeatherMap API ---
 const API_KEY = process.env.OPENWEATHER_API_KEY;
 const BASE_URL = "https://api.openweathermap.org/data/2.5";
-const GEO_URL = "http://api.openweathermap.org/geo/1.0";
+const GEO_URL = "https://api.openweathermap.org/geo/1.0";
 
 
 function processForecastData(forecastList: any[]): DailyForecast[] {
