@@ -6,6 +6,11 @@ export interface DailyForecast {
   icon: string;
 }
 
+export interface HourlyData {
+  time: string;
+  temp: number;
+}
+
 export interface WeatherData {
   city: string;
   temperature: number;
@@ -17,6 +22,12 @@ export interface WeatherData {
   forecast: DailyForecast[];
   dt: number;
   timezone: number;
+  feels_like: number;
+  pressure: number;
+  visibility: number;
+  sunrise: number;
+  sunset: number;
+  hourly: HourlyData[];
 }
 
 export interface CitySuggestion {

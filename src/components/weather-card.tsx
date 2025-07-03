@@ -1,6 +1,6 @@
 "use client";
 
-import { Droplets, Wind, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { es } from "date-fns/locale";
 import {
@@ -47,22 +47,12 @@ export function WeatherCard({ data }: WeatherCardProps) {
             <p className="text-xs">(Actualizado {formatDistanceToNow(new Date(data.dt * 1000), { addSuffix: true, locale: es })})</p>
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-center">
           <WeatherIcon icon={data.icon} className="h-36 w-36 text-primary drop-shadow-lg" />
           <div className="font-headline text-8xl font-extrabold tracking-tighter">
             {Math.round(data.temperature)}°
             <span className="text-7xl align-super font-semibold text-muted-foreground/80">C</span>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-          <div className="flex items-center justify-center gap-2 rounded-lg bg-background p-3 transition-colors hover:bg-accent/50">
-            <Droplets className="h-5 w-5 text-primary" />
-            <span>Humedad: {data.humidity}%</span>
-          </div>
-          <div className="flex items-center justify-center gap-2 rounded-lg bg-background p-3 transition-colors hover:bg-accent/50">
-            <Wind className="h-5 w-5 text-primary" />
-            <span>Viento: {(data.windSpeed * 3.6).toFixed(1)} km/h</span>
           </div>
         </div>
       </CardContent>
@@ -78,14 +68,10 @@ export function WeatherCardSkeleton() {
         <Skeleton className="h-6 w-32" />
         <Skeleton className="mt-2 h-5 w-48" />
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-center">
           <Skeleton className="h-36 w-36 rounded-full" />
           <Skeleton className="h-24 w-40" />
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-12 w-full" />
         </div>
       </CardContent>
     </Card>

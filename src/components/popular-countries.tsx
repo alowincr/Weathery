@@ -22,19 +22,16 @@ interface PopularCountriesProps {
 }
 
 const countryData = {
-  "España": ["Madrid", "Barcelona", "Valencia", "Sevilla", "Zaragoza"],
-  "Argentina": ["Buenos Aires", "Córdoba", "Rosario", "Mendoza", "La Plata"],
-  "México": ["Mexico City", "Guadalajara", "Monterrey", "Puebla", "Tijuana"],
   "Estados Unidos": ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix"],
-  "Chile": ["Santiago", "Valparaíso", "Concepción", "La Serena", "Antofagasta"],
-  "Rusia": ["Moscow", "Saint Petersburg", "Novosibirsk", "Yekaterinburg", "Kazan"],
+  "España": ["Madrid", "Barcelona", "Valencia", "Sevilla", "Zaragoza"],
+  "México": ["Mexico City", "Guadalajara", "Monterrey", "Puebla", "Tijuana"],
   "Brasil": ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador", "Fortaleza"],
-  "Colombia": ["Bogotá", "Medellín", "Cali", "Barranquilla", "Cartagena"],
-  "Paraguay": ["Asunción", "Ciudad del Este", "San Lorenzo", "Luque", "Capiatá"],
-  "Ecuador": ["Quito", "Guayaquil", "Cuenca", "Santo Domingo", "Machala"],
-  "Portugal": ["Lisbon", "Porto", "Vila Nova de Gaia", "Amadora", "Braga"],
-  "Perú": ["Lima", "Arequipa", "Trujillo", "Chiclayo", "Piura"],
   "Francia": ["Paris", "Marseille", "Lyon", "Toulouse", "Nice"],
+  "Rusia": ["Moscow", "Saint Petersburg", "Novosibirsk", "Yekaterinburg", "Kazan"],
+  "Argentina": ["Buenos Aires", "Córdoba", "Rosario", "Mendoza", "La Plata"],
+  "Colombia": ["Bogotá", "Medellín", "Cali", "Barranquilla", "Cartagena"],
+  "Perú": ["Lima", "Arequipa", "Trujillo", "Chiclayo", "Piura"],
+  "Chile": ["Santiago", "Valparaíso", "Concepción", "La Serena", "Antofagasta"],
 };
 
 

@@ -24,6 +24,8 @@ import { PopularCities } from "@/components/popular-cities";
 import { PopularCountries } from "@/components/popular-countries";
 import { ForecastDisplay, ForecastDisplaySkeleton } from "@/components/forecast-display";
 import { Card, CardContent } from "@/components/ui/card";
+import { WeatherDetails, WeatherDetailsSkeleton } from "@/components/weather-details";
+import { HourlyForecast, HourlyForecastSkeleton } from "@/components/hourly-forecast";
 
 const formSchema = z.object({
   city: z
@@ -262,11 +264,19 @@ export default function Home() {
             <>
               <WeatherCardSkeleton />
               <ForecastDisplaySkeleton />
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <HourlyForecastSkeleton />
+                <WeatherDetailsSkeleton />
+              </div>
             </>
           ) : weatherData ? (
             <>
               <WeatherCard data={weatherData} />
               <ForecastDisplay forecast={weatherData.forecast} />
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                 <HourlyForecast data={weatherData.hourly} />
+                 <WeatherDetails data={weatherData} />
+              </div>
             </>
           ) : error ? (
             <div className="flex h-[60vh] flex-col items-center justify-center rounded-lg border-2 border-dashed bg-card p-8 text-center">

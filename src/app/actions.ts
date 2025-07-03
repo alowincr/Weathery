@@ -1,6 +1,6 @@
 "use server";
 
-import type { WeatherData, DailyForecast, CitySuggestion } from "@/lib/types";
+import type { WeatherData, DailyForecast, CitySuggestion, HourlyData } from "@/lib/types";
 
 // --- Mock Data (Fallback) ---
 const generateMockForecast = (baseTemp: number): DailyForecast[] => {
@@ -14,11 +14,22 @@ const generateMockForecast = (baseTemp: number): DailyForecast[] => {
   }));
 };
 
+const generateMockHourly = (baseTemp: number): HourlyData[] => {
+  const hours = [];
+  for (let i = 0; i < 8; i++) {
+    hours.push({
+      time: `${(new Date().getHours() + i * 3) % 24}:00`,
+      temp: baseTemp + Math.floor(Math.random() * 4) - 2,
+    });
+  }
+  return hours;
+}
+
 const mockWeatherData: Record<string, Omit<WeatherData, "city">> = {
-  london: { temperature: 15, description: "Nubes Dispersas", icon: "Clouds", humidity: 77, windSpeed: 4.6, isDay: true, forecast: generateMockForecast(15), dt: Math.floor(Date.now() / 1000), timezone: 3600 },
-  paris: { temperature: 22, description: "Cielo Despejado", icon: "Clear", humidity: 60, windSpeed: 3.1, isDay: true, forecast: generateMockForecast(22), dt: Math.floor(Date.now() / 1000), timezone: 7200 },
-  tokyo: { temperature: 28, description: "Lluvia Ligera", icon: "Rain", humidity: 85, windSpeed: 2.5, isDay: false, forecast: generateMockForecast(28), dt: Math.floor(Date.now() / 1000), timezone: 32400 },
-  "new york": { temperature: 25, description: "Pocas Nubes", icon: "Clouds", humidity: 55, windSpeed: 5.8, isDay: true, forecast: generateMockForecast(25), dt: Math.floor(Date.now() / 1000), timezone: -14400 },
+  london: { temperature: 15, description: "Nubes Dispersas", icon: "Clouds", humidity: 77, windSpeed: 4.6, isDay: true, forecast: generateMockForecast(15), dt: Math.floor(Date.now() / 1000), timezone: 3600, feels_like: 14, pressure: 1012, visibility: 10000, sunrise: Date.now() / 1000 - 3600 * 5, sunset: Date.now() / 1000 + 3600 * 5, hourly: generateMockHourly(15) },
+  paris: { temperature: 22, description: "Cielo Despejado", icon: "Clear", humidity: 60, windSpeed: 3.1, isDay: true, forecast: generateMockForecast(22), dt: Math.floor(Date.now() / 1000), timezone: 7200, feels_like: 22, pressure: 1015, visibility: 10000, sunrise: Date.now() / 1000 - 3600 * 5, sunset: Date.now() / 1000 + 3600 * 5, hourly: generateMockHourly(22) },
+  tokyo: { temperature: 28, description: "Lluvia Ligera", icon: "Rain", humidity: 85, windSpeed: 2.5, isDay: false, forecast: generateMockForecast(28), dt: Math.floor(Date.now() / 1000), timezone: 32400, feels_like: 31, pressure: 1008, visibility: 8000, sunrise: Date.now() / 1000 - 3600 * 5, sunset: Date.now() / 1000 + 3600 * 5, hourly: generateMockHourly(28) },
+  "new york": { temperature: 25, description: "Pocas Nubes", icon: "Clouds", humidity: 55, windSpeed: 5.8, isDay: true, forecast: generateMockForecast(25), dt: Math.floor(Date.now() / 1000), timezone: -14400, feels_like: 26, pressure: 1018, visibility: 10000, sunrise: Date.now() / 1000 - 3600 * 5, sunset: Date.now() / 1000 + 3600 * 5, hourly: generateMockHourly(25) },
 };
 
 async function getMockWeather(city: string): Promise<{ data: WeatherData | null; error: string | null }> {
@@ -81,6 +92,17 @@ function processForecastData(forecastList: any[]): DailyForecast[] {
   });
 }
 
+function processHourlyData(forecastList: any[], timezone: number): HourlyData[] {
+  return forecastList.slice(0, 8).map(item => {
+    const date = new Date((item.dt + timezone) * 1000);
+    const time = date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', timeZone: 'UTC' });
+    return {
+      time,
+      temp: Math.round(item.main.temp),
+    }
+  })
+}
+
 
 async function fetchWeatherData(params: URLSearchParams): Promise<{ data: WeatherData | null; error: string | null }> {
     try {
@@ -106,6 +128,7 @@ async function fetchWeatherData(params: URLSearchParams): Promise<{ data: Weathe
         const forecastData = await forecastResponse.json();
         
         const dailyForecasts = processForecastData(forecastData.list);
+        const hourlyForecast = processHourlyData(forecastData.list, weatherData.timezone);
 
         const isDay = weatherData.dt > weatherData.sys.sunrise && weatherData.dt < weatherData.sys.sunset;
         
@@ -120,6 +143,12 @@ async function fetchWeatherData(params: URLSearchParams): Promise<{ data: Weathe
             forecast: dailyForecasts,
             dt: weatherData.dt,
             timezone: weatherData.timezone,
+            feels_like: weatherData.main.feels_like,
+            pressure: weatherData.main.pressure,
+            visibility: weatherData.visibility,
+            sunrise: weatherData.sys.sunrise,
+            sunset: weatherData.sys.sunset,
+            hourly: hourlyForecast,
         };
 
         return { data, error: null };
