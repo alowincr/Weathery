@@ -61,7 +61,13 @@ export async function getCitySuggestions(query: string): Promise<{ suggestions: 
   }
   
   try {
-    const response = await fetch(`${GEO_URL}/direct?q=${query}&limit=5&appid=${API_KEY}`);
+    const params = new URLSearchParams({
+      q: query,
+      limit: '5',
+      appid: API_KEY,
+    });
+    const response = await fetch(`${GEO_URL}/direct?${params.toString()}`);
+    
     if (!response.ok) {
         throw new Error('Failed to fetch city suggestions.');
     }
@@ -85,18 +91,39 @@ export async function getWeather(city: string): Promise<{ data: WeatherData | nu
   }
 
   try {
+    const apiParams = {
+        q: city,
+        appid: API_KEY,
+        units: 'metric'
+    };
+    
     // Fetch current weather
-    const weatherResponse = await fetch(`${BASE_URL}/weather?q=${city}&appid=${API_KEY}&units=metric`);
+    const weatherResponse = await fetch(`${BASE_URL}/weather?${new URLSearchParams(apiParams).toString()}`);
     if (!weatherResponse.ok) {
-      if(weatherResponse.status === 404) throw new Error(`Weather data not found for "${city}".`);
-      throw new Error('Failed to fetch current weather.');
+      if (weatherResponse.status === 404) {
+        throw new Error(`Weather data not found for "${city}".`);
+      }
+      try {
+        const errorData = await weatherResponse.json();
+        // OpenWeatherMap error messages can be unhelpful, so we'll add a prefix.
+        const message = errorData.message ? `API Error: ${errorData.message}` : 'Failed to fetch current weather.';
+        throw new Error(message);
+      } catch (e) {
+        throw new Error('Failed to fetch current weather.');
+      }
     }
     const weatherData = await weatherResponse.json();
 
     // Fetch 5-day forecast
-    const forecastResponse = await fetch(`${BASE_URL}/forecast?q=${city}&appid=${API_KEY}&units=metric`);
+    const forecastResponse = await fetch(`${BASE_URL}/forecast?${new URLSearchParams(apiParams).toString()}`);
      if (!forecastResponse.ok) {
-      throw new Error('Failed to fetch forecast data.');
+        try {
+            const errorData = await forecastResponse.json();
+            const message = errorData.message ? `API Error: ${errorData.message}` : 'Failed to fetch forecast data.';
+            throw new Error(message);
+        } catch(e) {
+            throw new Error('Failed to fetch forecast data.');
+        }
     }
     const forecastData = await forecastResponse.json();
 
@@ -132,6 +159,10 @@ export async function getWeather(city: string): Promise<{ data: WeatherData | nu
     return { data, error: null };
   } catch (error: any) {
     console.error("OpenWeatherMap API error:", error);
+    // Add a check for a common API key issue.
+    if (error.message && error.message.toLowerCase().includes("invalid api key")) {
+        return { data: null, error: "Invalid API key. Please check your .env.local file. It may also take a few hours for a new key to become active." };
+    }
     return { data: null, error: error.message || "An unknown error occurred." };
   }
 }
