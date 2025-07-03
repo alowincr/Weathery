@@ -1,7 +1,7 @@
 "use client";
 
 import { History } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -25,26 +25,22 @@ export function SearchHistory({ history, onSearch, disabled }: SearchHistoryProp
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <History className="h-5 w-5" />
-          Recent Searches
+          Búsquedas Recientes
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-wrap gap-2">
           {history.map((city) => (
-            <button
+            <Button
               key={city}
+              variant="secondary"
+              size="sm"
               onClick={() => onSearch(city)}
               disabled={disabled}
               className="rounded-full"
-              aria-label={`Search for ${city}`}
             >
-              <Badge
-                variant="outline"
-                className="cursor-pointer border-primary/50 bg-primary/10 text-primary hover:bg-primary/20 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                {city}
-              </Badge>
-            </button>
+              {city}
+            </Button>
           ))}
         </div>
       </CardContent>

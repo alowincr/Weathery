@@ -1,6 +1,7 @@
 export interface DailyForecast {
   day: string;
-  temperature: number;
+  temp_min: number;
+  temp_max: number;
   description: string;
   icon: string;
 }
@@ -12,6 +13,7 @@ export interface WeatherData {
   humidity: number;
   windSpeed: number;
   icon: string;
+  isDay: boolean;
   forecast: DailyForecast[];
 }
 

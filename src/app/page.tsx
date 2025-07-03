@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Cloud, Search, MapPin, Loader2 } from "lucide-react";
+import { Cloud, Search, MapPin, Loader2, LocateFixed } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import type { WeatherData, CitySuggestion } from "@/lib/types";
-import { getWeather, getCitySuggestions } from "./actions";
+import { getWeather, getWeatherByCoords, getCitySuggestions } from "./actions";
 import { WeatherCard, WeatherCardSkeleton } from "@/components/weather-card";
 import { SearchHistory } from "@/components/search-history";
 import { PopularCities } from "@/components/popular-cities";
@@ -27,13 +27,14 @@ import { Card, CardContent } from "@/components/ui/card";
 const formSchema = z.object({
   city: z
     .string()
-    .min(2, { message: "City name must be at least 2 characters." }),
+    .min(2, { message: "El nombre de la ciudad debe tener al menos 2 caracteres." }),
 });
 
 export default function Home() {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
   const [isSuggesting, setIsSuggesting] = useState(false);
   const { toast } = useToast();
@@ -45,6 +46,7 @@ export default function Home() {
 
   const cityValue = form.watch("city");
 
+  // Load initial data and search history
   useEffect(() => {
     try {
       const storedHistory = localStorage.getItem("weatherSearchHistory");
@@ -52,23 +54,33 @@ export default function Home() {
         setSearchHistory(JSON.parse(storedHistory));
       }
     } catch (error) {
-      console.error("Failed to parse search history from localStorage", error);
+      console.error("No se pudo analizar el historial de búsqueda de localStorage", error);
     }
     
     handleSearch("London", true);
   }, []);
 
+  // Day/Night theme effect
   useEffect(() => {
-    const controller = new AbortController();
+    if (weatherData) {
+      document.documentElement.classList.toggle('dark', !weatherData.isDay);
+    }
+  }, [weatherData]);
+
+  // City suggestions effect
+  useEffect(() => {
     if (cityValue.length < 3) {
       setSuggestions([]);
       return;
     }
 
+    const controller = new AbortController();
     const fetchSuggestions = async () => {
       setIsSuggesting(true);
-      const { suggestions: newSuggestions } = await getCitySuggestions(cityValue);
-      if (newSuggestions) {
+      const { suggestions: newSuggestions, error } = await getCitySuggestions(cityValue);
+      if (error) {
+        console.warn(error);
+      } else if (newSuggestions) {
         setSuggestions(newSuggestions);
       }
       setIsSuggesting(false);
@@ -84,16 +96,9 @@ export default function Home() {
     };
   }, [cityValue]);
 
-  const handleSearch = async (city: string, isInitialLoad = false) => {
-    setSuggestions([]);
-    setIsLoading(true);
-    if (!isInitialLoad) {
-      setWeatherData(null);
-    }
-    
-    const result = await getWeather(city);
-
+  const processSearchResult = (result: { data: WeatherData | null; error: string | null }, city: string, isInitialLoad = false) => {
     if (result.error) {
+      setError(result.error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -101,6 +106,7 @@ export default function Home() {
       });
       if (!isInitialLoad) setWeatherData(null);
     } else if (result.data) {
+      setError(null);
       form.setValue("city", result.data.city, { shouldValidate: true });
       setWeatherData(result.data);
       if (!isInitialLoad) {
@@ -116,6 +122,48 @@ export default function Home() {
     }
     setIsLoading(false);
   };
+
+  const handleSearch = async (city: string, isInitialLoad = false) => {
+    setSuggestions([]);
+    setIsLoading(true);
+    setError(null);
+    if (!isInitialLoad) {
+      setWeatherData(null);
+    }
+    
+    const result = await getWeather(city);
+    processSearchResult(result, city, isInitialLoad);
+  };
+
+  const handleSearchByCoords = async (lat: number, lon: number) => {
+    setIsLoading(true);
+    setError(null);
+    setWeatherData(null);
+    const result = await getWeatherByCoords(lat, lon);
+    processSearchResult(result, `${lat},${lon}`);
+  }
+
+  const handleGeolocation = () => {
+    if (!navigator.geolocation) {
+      toast({ variant: "destructive", title: "Error", description: "La geolocalización no es compatible con tu navegador." });
+      return;
+    }
+    
+    setIsLoading(true);
+    setWeatherData(null);
+    setError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        handleSearchByCoords(position.coords.latitude, position.coords.longitude);
+      },
+      () => {
+        setIsLoading(false);
+        toast({ variant: "destructive", title: "Error de ubicación", description: "No se pudo obtener tu ubicación. Por favor, habilita los permisos de ubicación en tu navegador." });
+        setError("No se pudo acceder a tu ubicación. Por favor, permite el acceso e inténtalo de nuevo.");
+      }
+    );
+  };
   
   const handleSuggestionClick = (suggestion: CitySuggestion) => {
     const city = `${suggestion.name}, ${suggestion.country}`;
@@ -129,13 +177,13 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-muted/20 lg:flex-row">
-      <aside className="w-full shrink-0 space-y-6 border-b bg-background p-4 lg:w-96 lg:border-b-0 lg:border-r">
+    <div className="flex min-h-screen w-full flex-col bg-background text-foreground transition-colors duration-500 lg:flex-row">
+      <aside className="w-full shrink-0 space-y-6 border-b bg-card p-4 lg:w-96 lg:border-b-0 lg:border-r">
         <div className="space-y-2">
             <h1 className="font-headline text-3xl font-bold tracking-tight text-primary">
                 WeatherWise
             </h1>
-            <p className="text-muted-foreground">Your friendly forecast app</p>
+            <p className="text-muted-foreground">Tu amigable app del tiempo</p>
         </div>
         
         <Form {...form}>
@@ -149,7 +197,7 @@ export default function Home() {
                     <MapPin className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                     <FormControl>
                       <Input
-                        placeholder="E.g., London, Paris, Tokyo"
+                        placeholder="Ej: Londres, París, Tokio"
                         className="pl-10"
                         {...field}
                         autoComplete="off"
@@ -157,7 +205,7 @@ export default function Home() {
                     </FormControl>
                     {isSuggesting && <Loader2 className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-muted-foreground" />}
                     {suggestions.length > 0 && (
-                      <Card className="absolute top-full z-10 mt-1 w-full border bg-background shadow-lg">
+                      <Card className="absolute top-full z-10 mt-1 w-full border bg-popover shadow-lg">
                         <CardContent className="p-1">
                           <ul className="space-y-1">
                             {suggestions.map((s, i) => (
@@ -180,10 +228,16 @@ export default function Home() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              <Search className="mr-2 h-4 w-4" />
-              {isLoading && !weatherData ? "Searching..." : "Search"}
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                <Search className="mr-2 h-4 w-4" />
+                {isLoading && !weatherData ? "Buscando..." : "Buscar"}
+              </Button>
+               <Button type="button" variant="outline" onClick={handleGeolocation} disabled={isLoading} className="w-full sm:w-auto px-4">
+                <LocateFixed className="h-4 w-4" />
+                <span className="sr-only sm:not-sr-only sm:ml-2">Mi Ubicación</span>
+              </Button>
+            </div>
           </form>
         </Form>
 
@@ -203,13 +257,21 @@ export default function Home() {
               <WeatherCard data={weatherData} />
               <ForecastDisplay forecast={weatherData.forecast} />
             </>
+          ) : error ? (
+            <div className="flex h-[60vh] flex-col items-center justify-center rounded-lg border-2 border-dashed bg-card p-8 text-center">
+              <Cloud className="h-16 w-16 text-muted-foreground" />
+              <p className="mt-4 font-medium text-destructive">
+                {error}
+              </p>
+               <p className="mt-2 text-sm text-muted-foreground">
+                Por favor, intenta buscar otra ciudad.
+              </p>
+            </div>
           ) : (
             <div className="flex h-[60vh] flex-col items-center justify-center rounded-lg border-2 border-dashed bg-card p-8 text-center">
               <Cloud className="h-16 w-16 text-muted-foreground" />
               <p className="mt-4 font-medium text-muted-foreground">
-                Could not find weather data.
-                <br />
-                Please try searching for another city.
+                Busca una ciudad para ver el pronóstico del tiempo.
               </p>
             </div>
           )}

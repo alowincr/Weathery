@@ -21,8 +21,8 @@ export function PopularCities({ onSearch, disabled }: PopularCitiesProps) {
     <Card className="animate-in fade-in-50 duration-500">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
-          <Star className="h-5 w-5" />
-          Popular Cities
+          <Star className="h-5 w-5 text-yellow-400" />
+          Ciudades Populares
         </CardTitle>
       </CardHeader>
       <CardContent>

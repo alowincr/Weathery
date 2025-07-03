@@ -3,33 +3,22 @@
 import type { WeatherData, DailyForecast, CitySuggestion } from "@/lib/types";
 
 // --- Mock Data (Fallback) ---
-const generateForecast = (baseTemp: number): DailyForecast[] => {
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-  const descriptions = ["Clear Sky", "Few Clouds", "Rain", "Scattered Clouds"];
-  const icons = ["clear", "clouds", "rain", "clouds"];
-  
-  return days.map((day) => {
-    const descIndex = Math.floor(Math.random() * descriptions.length);
-    return {
-      day,
-      temperature: baseTemp + (Math.floor(Math.random() * 6) - 3),
-      description: descriptions[descIndex],
-      icon: icons[descIndex],
-    }
-  });
+const generateMockForecast = (baseTemp: number): DailyForecast[] => {
+  const days = ["Lun", "Mar", "Mié", "Jue", "Vie"];
+  return days.map((day) => ({
+    day,
+    temp_min: baseTemp + (Math.floor(Math.random() * 6) - 5),
+    temp_max: baseTemp + (Math.floor(Math.random() * 6) + 2),
+    description: "Cielo Despejado",
+    icon: "Clear",
+  }));
 };
 
 const mockWeatherData: Record<string, Omit<WeatherData, "city">> = {
-  london: { temperature: 15, description: "Broken Clouds", icon: "clouds", humidity: 77, windSpeed: 4.6, forecast: generateForecast(15) },
-  paris: { temperature: 22, description: "Clear Sky", icon: "clear", humidity: 60, windSpeed: 3.1, forecast: generateForecast(22) },
-  tokyo: { temperature: 28, description: "Light Rain", icon: "rain", humidity: 85, windSpeed: 2.5, forecast: generateForecast(28) },
-  "new york": { temperature: 25, description: "Few Clouds", icon: "clouds", humidity: 55, windSpeed: 5.8, forecast: generateForecast(25) },
-  sydney: { temperature: 19, description: "Scattered Clouds", icon: "clouds", humidity: 65, windSpeed: 8.2, forecast: generateForecast(19) },
-  "san francisco": { temperature: 18, description: "Fog", icon: "fog", humidity: 80, windSpeed: 12.1, forecast: generateForecast(18) },
-  chicago: { temperature: 26, description: "Thunderstorm", icon: "rain", humidity: 70, windSpeed: 6.2, forecast: generateForecast(26) },
-  boston: { temperature: 23, description: "Partly Cloudy", icon: "clouds", humidity: 62, windSpeed: 7.5, forecast: generateForecast(23) },
-  houston: { temperature: 32, description: "Sunny", icon: "clear", humidity: 50, windSpeed: 5.0, forecast: generateForecast(32) },
-  lima: { temperature: 20, description: "Misty", icon: "fog", humidity: 88, windSpeed: 2.0, forecast: generateForecast(20) },
+  london: { temperature: 15, description: "Nubes Dispersas", icon: "Clouds", humidity: 77, windSpeed: 4.6, isDay: true, forecast: generateMockForecast(15) },
+  paris: { temperature: 22, description: "Cielo Despejado", icon: "Clear", humidity: 60, windSpeed: 3.1, isDay: true, forecast: generateMockForecast(22) },
+  tokyo: { temperature: 28, description: "Lluvia Ligera", icon: "Rain", humidity: 85, windSpeed: 2.5, isDay: false, forecast: generateMockForecast(28) },
+  "new york": { temperature: 25, description: "Pocas Nubes", icon: "Clouds", humidity: 55, windSpeed: 5.8, isDay: true, forecast: generateMockForecast(25) },
 };
 
 async function getMockWeather(city: string): Promise<{ data: WeatherData | null; error: string | null }> {
@@ -47,16 +36,131 @@ async function getMockWeather(city: string): Promise<{ data: WeatherData | null;
     };
   }
 
-  return { data: null, error: `Weather data not found for "${city}". Please try one of the popular cities.` };
+  return { data: null, error: `No se encontró clima para "${city}". Verifica si lo escribiste correctamente.` };
 }
+
 
 // --- OpenWeatherMap API ---
 const API_KEY = process.env.OPENWEATHER_API_KEY;
 const BASE_URL = "https://api.openweathermap.org/data/2.5";
-const GEO_URL = "https://api.openweathermap.org/geo/1.0";
+const GEO_URL = "http://api.openweathermap.org/geo/1.0";
+
+
+function processForecastData(forecastList: any[]): DailyForecast[] {
+  const dailyData: { [key: string]: { temps: number[], weathers: { main: string, description: string }[] } } = {};
+
+  for (const forecast of forecastList) {
+    const date = new Date(forecast.dt * 1000).toISOString().split('T')[0];
+    if (!dailyData[date]) {
+      dailyData[date] = { temps: [], weathers: [] };
+    }
+    dailyData[date].temps.push(forecast.main.temp);
+    dailyData[date].weathers.push({
+      main: forecast.weather[0].main,
+      description: forecast.weather[0].description
+    });
+  }
+
+  return Object.entries(dailyData).slice(0, 5).map(([date, data]) => {
+    const weatherCounts = data.weathers.reduce((acc, weather) => {
+        const main = weather.main;
+        acc[main] = (acc[main] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+
+    const mostFrequentWeather = Object.keys(weatherCounts).reduce((a, b) => weatherCounts[a] > weatherCounts[b] ? a : b);
+    const representativeWeather = data.weathers.find(w => w.main === mostFrequentWeather)!;
+
+    return {
+      day: new Date(date + 'T00:00:00').toLocaleDateString('es-ES', { weekday: 'short' }),
+      temp_min: Math.min(...data.temps),
+      temp_max: Math.max(...data.temps),
+      description: representativeWeather.description,
+      icon: representativeWeather.main,
+    };
+  });
+}
+
+
+async function fetchWeatherData(params: URLSearchParams): Promise<{ data: WeatherData | null; error: string | null }> {
+    try {
+        const weatherResponse = await fetch(`${BASE_URL}/weather?${params.toString()}`);
+        if (!weatherResponse.ok) {
+            if (weatherResponse.status === 401) {
+                throw new Error('Clave de API inválida. Por favor, revisa tu archivo .env.local. Una clave nueva puede tardar unas horas en activarse.');
+            }
+            if (weatherResponse.status === 404) {
+                 const city = params.get('q') || `${params.get('lat')}, ${params.get('lon')}`;
+                 throw new Error(`No se encontró clima para "${city}". Verifica si lo escribiste correctamente.`);
+            }
+            const errorData = await weatherResponse.json().catch(() => null);
+            throw new Error(errorData?.message || `Error al obtener el clima actual. Estado: ${weatherResponse.status}`);
+        }
+        const weatherData = await weatherResponse.json();
+
+        const forecastResponse = await fetch(`${BASE_URL}/forecast?${params.toString()}`);
+        if (!forecastResponse.ok) {
+            const errorData = await forecastResponse.json().catch(() => null);
+            throw new Error(errorData?.message || `Error al obtener el pronóstico. Estado: ${forecastResponse.status}`);
+        }
+        const forecastData = await forecastResponse.json();
+        
+        const dailyForecasts = processForecastData(forecastData.list);
+
+        const isDay = weatherData.dt > weatherData.sys.sunrise && weatherData.dt < weatherData.sys.sunset;
+        
+        const data: WeatherData = {
+            city: weatherData.name,
+            temperature: weatherData.main.temp,
+            description: weatherData.weather[0].description,
+            humidity: weatherData.main.humidity,
+            windSpeed: weatherData.wind.speed,
+            icon: weatherData.weather[0].main,
+            isDay: isDay,
+            forecast: dailyForecasts,
+        };
+
+        return { data, error: null };
+
+    } catch (error: any) {
+        console.error("Error en la API de OpenWeatherMap:", error);
+        return { data: null, error: error.message || "Ocurrió un error desconocido." };
+    }
+}
+
+export async function getWeather(city: string): Promise<{ data: WeatherData | null; error: string | null }> {
+    if (!API_KEY) {
+        console.log("OPENWEATHER_API_KEY no encontrada. Usando datos de demostración.");
+        return getMockWeather(city);
+    }
+    const params = new URLSearchParams({
+        q: city,
+        appid: API_KEY,
+        units: 'metric',
+        lang: 'es'
+    });
+    return fetchWeatherData(params);
+}
+
+export async function getWeatherByCoords(lat: number, lon: number): Promise<{ data: WeatherData | null; error: string | null }> {
+    if (!API_KEY) {
+        return { data: null, error: "La clave de API de OpenWeatherMap no está configurada." };
+    }
+    const params = new URLSearchParams({
+        lat: lat.toString(),
+        lon: lon.toString(),
+        appid: API_KEY,
+        units: 'metric',
+        lang: 'es'
+    });
+    return fetchWeatherData(params);
+}
 
 export async function getCitySuggestions(query: string): Promise<{ suggestions: CitySuggestion[] | null, error: string | null }> {
   if (!API_KEY) {
+    return { suggestions: [], error: null };
+  }
+  if (query.length < 3) {
     return { suggestions: [], error: null };
   }
   
@@ -69,7 +173,7 @@ export async function getCitySuggestions(query: string): Promise<{ suggestions: 
     const response = await fetch(`${GEO_URL}/direct?${params.toString()}`);
     
     if (!response.ok) {
-        throw new Error('Failed to fetch city suggestions.');
+        throw new Error('No se pudieron obtener sugerencias de ciudades.');
     }
     const data = await response.json();
     const suggestions: CitySuggestion[] = data.map((item: any) => ({
@@ -79,78 +183,7 @@ export async function getCitySuggestions(query: string): Promise<{ suggestions: 
     }));
     return { suggestions, error: null };
   } catch (error) {
-    console.error("Geocoding API error:", error);
-    return { suggestions: null, error: "Could not fetch city suggestions." };
-  }
-}
-
-export async function getWeather(city: string): Promise<{ data: WeatherData | null; error: string | null }> {
-  if (!API_KEY) {
-    console.log("OPENWEATHER_API_KEY not found. Using mock data.");
-    return getMockWeather(city);
-  }
-
-  try {
-    const apiParams = {
-        q: city,
-        appid: API_KEY,
-        units: 'metric'
-    };
-    
-    // Fetch current weather
-    const weatherResponse = await fetch(`${BASE_URL}/weather?${new URLSearchParams(apiParams).toString()}`);
-    if (!weatherResponse.ok) {
-        if (weatherResponse.status === 401) {
-            throw new Error('Invalid API key. Please check your .env.local file. It may take a few hours for a new key to activate.');
-        }
-        if (weatherResponse.status === 404) {
-            throw new Error(`Weather data not found for "${city}".`);
-        }
-        const errorData = await weatherResponse.json().catch(() => null);
-        throw new Error(errorData?.message || `Failed to fetch current weather. Status: ${weatherResponse.status}`);
-    }
-    const weatherData = await weatherResponse.json();
-
-    // Fetch 5-day forecast
-    const forecastResponse = await fetch(`${BASE_URL}/forecast?${new URLSearchParams(apiParams).toString()}`);
-     if (!forecastResponse.ok) {
-        const errorData = await forecastResponse.json().catch(() => null);
-        throw new Error(errorData?.message || `Failed to fetch forecast data. Status: ${forecastResponse.status}`);
-    }
-    const forecastData = await forecastResponse.json();
-
-    // Process forecast data
-    const dailyForecasts: DailyForecast[] = [];
-    const seenDays = new Set<string>();
-    
-    for (const forecast of forecastData.list) {
-      const date = new Date(forecast.dt * 1000);
-      const dayKey = date.toISOString().split('T')[0];
-
-      if (!seenDays.has(dayKey) && dailyForecasts.length < 5) {
-        seenDays.add(dayKey);
-        dailyForecasts.push({
-          day: date.toLocaleDateString('en-US', { weekday: 'short' }),
-          temperature: forecast.main.temp,
-          description: forecast.weather[0].description,
-          icon: forecast.weather[0].main,
-        });
-      }
-    }
-
-    const data: WeatherData = {
-      city: weatherData.name,
-      temperature: weatherData.main.temp,
-      description: weatherData.weather[0].description,
-      humidity: weatherData.main.humidity,
-      windSpeed: weatherData.wind.speed,
-      icon: weatherData.weather[0].main,
-      forecast: dailyForecasts,
-    };
-    
-    return { data, error: null };
-  } catch (error: any) {
-    console.error("OpenWeatherMap API error:", error);
-    return { data: null, error: error.message || "An unknown error occurred." };
+    console.error("Error en la API de geocodificación:", error);
+    return { suggestions: null, error: "No se pudieron obtener sugerencias de ciudades." };
   }
 }
