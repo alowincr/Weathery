@@ -20,6 +20,9 @@ import type { WeatherData } from "@/lib/types";
 import { getWeather } from "./actions";
 import { WeatherCard, WeatherCardSkeleton } from "@/components/weather-card";
 import { SearchHistory } from "@/components/search-history";
+import { PopularCities } from "@/components/popular-cities";
+import { ForecastDisplay, ForecastDisplaySkeleton } from "@/components/forecast-display";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const formSchema = z.object({
   city: z
@@ -30,9 +33,16 @@ const formSchema = z.object({
 export default function Home() {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      city: "",
+    },
+  });
+  
   useEffect(() => {
     try {
       const storedHistory = localStorage.getItem("weatherSearchHistory");
@@ -42,18 +52,15 @@ export default function Home() {
     } catch (error) {
       console.error("Failed to parse search history from localStorage", error);
     }
+    
+    handleSearch("London", true);
   }, []);
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      city: "",
-    },
-  });
-
-  const handleSearch = async (city: string) => {
+  const handleSearch = async (city: string, isInitialLoad = false) => {
     setIsLoading(true);
-    setWeatherData(null);
+    if (!isInitialLoad) {
+        setWeatherData(null);
+    }
     form.setValue("city", city);
 
     const result = await getWeather(city);
@@ -64,17 +71,19 @@ export default function Home() {
         title: "Error",
         description: result.error,
       });
-      setWeatherData(null);
+      if (!isInitialLoad) setWeatherData(null);
     } else if (result.data) {
       setWeatherData(result.data);
-      const newHistory = [
-        result.data.city,
-        ...searchHistory.filter(
-          (h) => h.toLowerCase() !== result.data.city.toLowerCase()
-        ),
-      ].slice(0, 5);
-      setSearchHistory(newHistory);
-      localStorage.setItem("weatherSearchHistory", JSON.stringify(newHistory));
+      if (!isInitialLoad) {
+        const newHistory = [
+          result.data.city,
+          ...searchHistory.filter(
+            (h) => h.toLowerCase() !== result.data.city.toLowerCase()
+          ),
+        ].slice(0, 5);
+        setSearchHistory(newHistory);
+        localStorage.setItem("weatherSearchHistory", JSON.stringify(newHistory));
+      }
     }
     setIsLoading(false);
   };
@@ -84,17 +93,15 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center p-4 sm:p-6 md:p-8">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <h1 className="font-headline text-5xl font-bold tracking-tight text-primary sm:text-6xl">
-            WeatherWise
-          </h1>
-          <p className="mt-2 text-lg text-foreground/80">
-            Your friendly weather forecast app
-          </p>
+    <div className="flex min-h-screen w-full flex-col bg-muted/20 lg:flex-row">
+      <aside className="w-full shrink-0 space-y-6 border-b bg-background p-4 lg:w-96 lg:border-b-0 lg:border-r">
+        <div className="space-y-2">
+            <h1 className="font-headline text-3xl font-bold tracking-tight text-primary">
+                WeatherWise
+            </h1>
+            <p className="text-muted-foreground">Your friendly forecast app</p>
         </div>
-
+        
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -118,28 +125,39 @@ export default function Home() {
             />
             <Button type="submit" className="w-full" disabled={isLoading}>
               <Search className="mr-2 h-4 w-4" />
-              {isLoading ? "Searching..." : "Search"}
+              {isLoading && !weatherData ? "Searching..." : "Search"}
             </Button>
           </form>
         </Form>
-        
-        <div className="h-[420px] pt-4">
+
+        <PopularCities onSearch={handleSearch} disabled={isLoading} />
+        <SearchHistory history={searchHistory} onSearch={handleSearch} disabled={isLoading} />
+      </aside>
+
+      <main className="flex-1 p-4 sm:p-6 md:p-8">
+        <div className="h-full w-full max-w-4xl mx-auto space-y-6">
           {isLoading ? (
-            <WeatherCardSkeleton />
+            <>
+              <WeatherCardSkeleton />
+              <ForecastDisplaySkeleton />
+            </>
           ) : weatherData ? (
-            <WeatherCard data={weatherData} />
+            <>
+              <WeatherCard data={weatherData} />
+              <ForecastDisplay forecast={weatherData.forecast} />
+            </>
           ) : (
-            <div className="flex h-full flex-col items-center justify-center rounded-lg border-2 border-dashed bg-card p-8 text-center">
+            <div className="flex h-[60vh] flex-col items-center justify-center rounded-lg border-2 border-dashed bg-card p-8 text-center">
               <Cloud className="h-16 w-16 text-muted-foreground" />
               <p className="mt-4 font-medium text-muted-foreground">
-                Search for a city to see the weather forecast.
+                Could not find weather data.
+                <br />
+                Please try searching for another city.
               </p>
             </div>
           )}
         </div>
-
-        <SearchHistory history={searchHistory} onSearch={handleSearch} disabled={isLoading} />
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }
