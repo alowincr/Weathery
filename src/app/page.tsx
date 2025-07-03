@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -21,6 +21,7 @@ import { getWeather, getWeatherByCoords, getCitySuggestions } from "./actions";
 import { WeatherCard, WeatherCardSkeleton } from "@/components/weather-card";
 import { SearchHistory } from "@/components/search-history";
 import { PopularCities } from "@/components/popular-cities";
+import { PopularCountries } from "@/components/popular-countries";
 import { ForecastDisplay, ForecastDisplaySkeleton } from "@/components/forecast-display";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -45,6 +46,7 @@ export default function Home() {
   });
 
   const cityValue = form.watch("city");
+  const suggestionSelectedRef = useRef(false);
 
   // Load initial data and search history
   useEffect(() => {
@@ -69,6 +71,10 @@ export default function Home() {
 
   // City suggestions effect
   useEffect(() => {
+    if (suggestionSelectedRef.current) {
+        suggestionSelectedRef.current = false;
+        return;
+    }
     if (cityValue.length < 3) {
       setSuggestions([]);
       return;
@@ -107,6 +113,7 @@ export default function Home() {
       if (!isInitialLoad) setWeatherData(null);
     } else if (result.data) {
       setError(null);
+      suggestionSelectedRef.current = true;
       form.setValue("city", result.data.city, { shouldValidate: true });
       setWeatherData(result.data);
       if (!isInitialLoad) {
@@ -167,12 +174,14 @@ export default function Home() {
   
   const handleSuggestionClick = (suggestion: CitySuggestion) => {
     const city = `${suggestion.name}, ${suggestion.country}`;
+    suggestionSelectedRef.current = true;
     form.setValue("city", city);
     setSuggestions([]);
     handleSearch(city);
   };
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
+    setSuggestions([]);
     handleSearch(values.city);
   };
 
@@ -201,6 +210,7 @@ export default function Home() {
                         className="pl-10"
                         {...field}
                         autoComplete="off"
+                        onBlur={() => setTimeout(() => setSuggestions([]), 150)}
                       />
                     </FormControl>
                     {isSuggesting && <Loader2 className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-muted-foreground" />}
@@ -242,6 +252,7 @@ export default function Home() {
         </Form>
 
         <PopularCities onSearch={handleSearch} disabled={isLoading} />
+        <PopularCountries onSearch={handleSearch} disabled={isLoading} />
         <SearchHistory history={searchHistory} onSearch={handleSearch} disabled={isLoading} />
       </aside>
 

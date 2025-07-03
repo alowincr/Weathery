@@ -22,7 +22,7 @@ export function PopularCities({ onSearch, disabled }: PopularCitiesProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Star className="h-5 w-5 text-yellow-400" />
-          Ciudades Populares
+          Ciudades Destacadas
         </CardTitle>
       </CardHeader>
       <CardContent>
