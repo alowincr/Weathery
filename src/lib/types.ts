@@ -14,3 +14,9 @@ export interface WeatherData {
   icon: string;
   forecast: DailyForecast[];
 }
+
+export interface CitySuggestion {
+  name: string;
+  country: string;
+  state?: string;
+}

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Cloud, Search, MapPin } from "lucide-react";
+import { Cloud, Search, MapPin, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,13 +16,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import type { WeatherData } from "@/lib/types";
-import { getWeather } from "./actions";
+import type { WeatherData, CitySuggestion } from "@/lib/types";
+import { getWeather, getCitySuggestions } from "./actions";
 import { WeatherCard, WeatherCardSkeleton } from "@/components/weather-card";
 import { SearchHistory } from "@/components/search-history";
 import { PopularCities } from "@/components/popular-cities";
 import { ForecastDisplay, ForecastDisplaySkeleton } from "@/components/forecast-display";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
 
 const formSchema = z.object({
   city: z
@@ -34,15 +34,17 @@ export default function Home() {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
+  const [isSuggesting, setIsSuggesting] = useState(false);
   const { toast } = useToast();
-
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      city: "",
-    },
+    defaultValues: { city: "" },
   });
-  
+
+  const cityValue = form.watch("city");
+
   useEffect(() => {
     try {
       const storedHistory = localStorage.getItem("weatherSearchHistory");
@@ -56,13 +58,39 @@ export default function Home() {
     handleSearch("London", true);
   }, []);
 
+  useEffect(() => {
+    const controller = new AbortController();
+    if (cityValue.length < 3) {
+      setSuggestions([]);
+      return;
+    }
+
+    const fetchSuggestions = async () => {
+      setIsSuggesting(true);
+      const { suggestions: newSuggestions } = await getCitySuggestions(cityValue);
+      if (newSuggestions) {
+        setSuggestions(newSuggestions);
+      }
+      setIsSuggesting(false);
+    };
+
+    const debounceTimeout = setTimeout(() => {
+      fetchSuggestions();
+    }, 300);
+
+    return () => {
+      clearTimeout(debounceTimeout);
+      controller.abort();
+    };
+  }, [cityValue]);
+
   const handleSearch = async (city: string, isInitialLoad = false) => {
+    setSuggestions([]);
     setIsLoading(true);
     if (!isInitialLoad) {
-        setWeatherData(null);
+      setWeatherData(null);
     }
-    form.setValue("city", city);
-
+    
     const result = await getWeather(city);
 
     if (result.error) {
@@ -73,6 +101,7 @@ export default function Home() {
       });
       if (!isInitialLoad) setWeatherData(null);
     } else if (result.data) {
+      form.setValue("city", result.data.city, { shouldValidate: true });
       setWeatherData(result.data);
       if (!isInitialLoad) {
         const newHistory = [
@@ -86,6 +115,13 @@ export default function Home() {
       }
     }
     setIsLoading(false);
+  };
+  
+  const handleSuggestionClick = (suggestion: CitySuggestion) => {
+    const city = `${suggestion.name}, ${suggestion.country}`;
+    form.setValue("city", city);
+    setSuggestions([]);
+    handleSearch(city);
   };
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
@@ -116,8 +152,29 @@ export default function Home() {
                         placeholder="E.g., London, Paris, Tokyo"
                         className="pl-10"
                         {...field}
+                        autoComplete="off"
                       />
                     </FormControl>
+                    {isSuggesting && <Loader2 className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-muted-foreground" />}
+                    {suggestions.length > 0 && (
+                      <Card className="absolute top-full z-10 mt-1 w-full border bg-background shadow-lg">
+                        <CardContent className="p-1">
+                          <ul className="space-y-1">
+                            {suggestions.map((s, i) => (
+                              <li key={`${s.name}-${s.country}-${i}`}>
+                                <button
+                                  type="button"
+                                  className="w-full text-left p-2 rounded-md hover:bg-accent text-sm"
+                                  onClick={() => handleSuggestionClick(s)}
+                                >
+                                  {s.name}{s.state ? `, ${s.state}` : ''}, {s.country}
+                                </button>
+                              </li>
+                            ))}
+                          </ul>
+                        </CardContent>
+                      </Card>
+                    )}
                   </div>
                   <FormMessage />
                 </FormItem>

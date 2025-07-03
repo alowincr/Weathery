@@ -1,8 +1,8 @@
 "use server";
 
-import type { WeatherData, DailyForecast } from "@/lib/types";
+import type { WeatherData, DailyForecast, CitySuggestion } from "@/lib/types";
 
-// Helper to generate mock forecast
+// --- Mock Data (Fallback) ---
 const generateForecast = (baseTemp: number): DailyForecast[] => {
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
   const descriptions = ["Clear Sky", "Few Clouds", "Rain", "Scattered Clouds"];
@@ -12,13 +12,12 @@ const generateForecast = (baseTemp: number): DailyForecast[] => {
     const descIndex = Math.floor(Math.random() * descriptions.length);
     return {
       day,
-      temperature: baseTemp + (Math.floor(Math.random() * 6) - 3), // +/- 3 degrees
+      temperature: baseTemp + (Math.floor(Math.random() * 6) - 3),
       description: descriptions[descIndex],
       icon: icons[descIndex],
     }
   });
 };
-
 
 const mockWeatherData: Record<string, Omit<WeatherData, "city">> = {
   london: { temperature: 15, description: "Broken Clouds", icon: "clouds", humidity: 77, windSpeed: 4.6, forecast: generateForecast(15) },
@@ -33,10 +32,9 @@ const mockWeatherData: Record<string, Omit<WeatherData, "city">> = {
   lima: { temperature: 20, description: "Misty", icon: "fog", humidity: 88, windSpeed: 2.0, forecast: generateForecast(20) },
 };
 
-export async function getWeather(city: string): Promise<{ data: WeatherData | null; error: string | null }> {
+async function getMockWeather(city: string): Promise<{ data: WeatherData | null; error: string | null }> {
   await new Promise(resolve => setTimeout(resolve, 500));
-
-  const normalizedCity = city.trim().toLowerCase();
+  const normalizedCity = city.trim().toLowerCase().split(',')[0];
   const weather = mockWeatherData[normalizedCity];
 
   if (weather) {
@@ -50,4 +48,90 @@ export async function getWeather(city: string): Promise<{ data: WeatherData | nu
   }
 
   return { data: null, error: `Weather data not found for "${city}". Please try one of the popular cities.` };
+}
+
+// --- OpenWeatherMap API ---
+const API_KEY = process.env.OPENWEATHER_API_KEY;
+const BASE_URL = "https://api.openweathermap.org/data/2.5";
+const GEO_URL = "https://api.openweathermap.org/geo/1.0";
+
+export async function getCitySuggestions(query: string): Promise<{ suggestions: CitySuggestion[] | null, error: string | null }> {
+  if (!API_KEY) {
+    return { suggestions: [], error: null };
+  }
+  
+  try {
+    const response = await fetch(`${GEO_URL}/direct?q=${query}&limit=5&appid=${API_KEY}`);
+    if (!response.ok) {
+        throw new Error('Failed to fetch city suggestions.');
+    }
+    const data = await response.json();
+    const suggestions: CitySuggestion[] = data.map((item: any) => ({
+      name: item.name,
+      country: item.country,
+      state: item.state,
+    }));
+    return { suggestions, error: null };
+  } catch (error) {
+    console.error("Geocoding API error:", error);
+    return { suggestions: null, error: "Could not fetch city suggestions." };
+  }
+}
+
+export async function getWeather(city: string): Promise<{ data: WeatherData | null; error: string | null }> {
+  if (!API_KEY) {
+    console.log("OPENWEATHER_API_KEY not found. Using mock data.");
+    return getMockWeather(city);
+  }
+
+  try {
+    // Fetch current weather
+    const weatherResponse = await fetch(`${BASE_URL}/weather?q=${city}&appid=${API_KEY}&units=metric`);
+    if (!weatherResponse.ok) {
+      if(weatherResponse.status === 404) throw new Error(`Weather data not found for "${city}".`);
+      throw new Error('Failed to fetch current weather.');
+    }
+    const weatherData = await weatherResponse.json();
+
+    // Fetch 5-day forecast
+    const forecastResponse = await fetch(`${BASE_URL}/forecast?q=${city}&appid=${API_KEY}&units=metric`);
+     if (!forecastResponse.ok) {
+      throw new Error('Failed to fetch forecast data.');
+    }
+    const forecastData = await forecastResponse.json();
+
+    // Process forecast data
+    const dailyForecasts: DailyForecast[] = [];
+    const seenDays = new Set<string>();
+    
+    for (const forecast of forecastData.list) {
+      const date = new Date(forecast.dt * 1000);
+      const dayKey = date.toISOString().split('T')[0]; // Use YYYY-MM-DD for uniqueness
+
+      if (!seenDays.has(dayKey) && dailyForecasts.length < 5) {
+        seenDays.add(dayKey);
+        dailyForecasts.push({
+          day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+          temperature: forecast.main.temp,
+          description: forecast.weather[0].description,
+          icon: forecast.weather[0].main,
+        });
+      }
+    }
+
+    const data: WeatherData = {
+      city: weatherData.name,
+      temperature: weatherData.main.temp,
+      description: weatherData.weather[0].description,
+      humidity: weatherData.main.humidity,
+      windSpeed: weatherData.wind.speed,
+      icon: weatherData.weather[0].main,
+      forecast: dailyForecasts,
+    };
+    
+    return { data, error: null };
+  } catch (error: any) {
+    console.error("OpenWeatherMap API error:", error);
+    return { data: null, error: error.message || "An unknown error occurred." };
+  }
 }
