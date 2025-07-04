@@ -19,32 +19,39 @@ export function ForecastDisplay({ forecast }: ForecastDisplayProps) {
     const ctx = gsap.context(() => {
       // Animate cards entrance
       gsap.fromTo(
-        containerRef.current!.children,
+        ".forecast-item",
         { y: 30, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: 'power2.out' }
       );
 
-      // Animate icons
-      gsap.to('.gsap-sun', {
-        rotation: 360,
-        repeat: -1,
-        duration: 25,
-        ease: 'none',
-      });
-      gsap.to('.gsap-cloud', {
-        y: -4,
-        repeat: -1,
-        yoyo: true,
-        duration: 3,
-        ease: 'sine.inOut'
-      })
+      // Animate icons only if they exist to prevent warnings
+      const sunIcons = containerRef.current?.querySelectorAll('.gsap-sun');
+      if (sunIcons?.length) {
+        gsap.to(sunIcons, {
+          rotation: 360,
+          repeat: -1,
+          duration: 25,
+          ease: 'none',
+        });
+      }
+      
+      const cloudIcons = containerRef.current?.querySelectorAll('.gsap-cloud');
+      if (cloudIcons?.length) {
+        gsap.to(cloudIcons, {
+          y: -4,
+          repeat: -1,
+          yoyo: true,
+          duration: 3,
+          ease: 'sine.inOut'
+        });
+      }
     }, containerRef);
 
     return () => ctx.revert();
   }, [forecast]);
   
   return (
-    <Card className="w-full">
+    <Card className="w-full animate-in fade-in-50 slide-in-from-bottom-5 duration-700">
       <CardHeader>
         <CardTitle>Pronóstico para 5 días</CardTitle>
       </CardHeader>
@@ -53,7 +60,7 @@ export function ForecastDisplay({ forecast }: ForecastDisplayProps) {
           {forecast.map((dayForecast, index) => (
             <div 
               key={index} 
-              className="flex flex-col items-center justify-center space-y-2 flex-shrink-0 w-28 rounded-lg bg-background p-3 text-center transition-colors hover:bg-accent/50 md:w-auto"
+              className="forecast-item flex flex-col items-center justify-center space-y-2 flex-shrink-0 w-28 rounded-lg bg-background p-3 text-center transition-colors hover:bg-accent/50 md:w-auto"
             >
               <span className="text-sm font-medium capitalize text-muted-foreground">{dayForecast.day.replace('.', '')}</span>
               <WeatherIcon icon={dayForecast.icon} className="h-10 w-10 text-primary" />
