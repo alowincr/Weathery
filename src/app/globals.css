@@ -68,30 +68,3 @@
     background-attachment: fixed;
   }
 }
-
-@layer utilities {
-  @keyframes sun-rotate {
-    from {
-      transform: rotate(0deg);
-    }
-    to {
-      transform: rotate(360deg);
-    }
-  }
-  .animate-sun-rotate {
-    animation: sun-rotate 25s linear infinite;
-  }
-
-  @keyframes cloud-float {
-    0%,
-    100% {
-      transform: translateY(-4%);
-    }
-    50% {
-      transform: translateY(4%);
-    }
-  }
-  .animate-cloud-float {
-    animation: cloud-float 5s ease-in-out infinite;
-  }
-}

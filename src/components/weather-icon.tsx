@@ -4,31 +4,34 @@ import { cn } from "@/lib/utils";
 interface WeatherIconProps {
   icon: string;
   className?: string;
-  isAnimated?: boolean;
 }
 
-export function WeatherIcon({ icon, className, isAnimated = false }: WeatherIconProps) {
+export function WeatherIcon({ icon, className }: WeatherIconProps) {
   const iconName = icon.toLowerCase();
 
-  const animationClass = isAnimated 
-    ? (iconName.includes("clear") ? "animate-sun-rotate" : "animate-cloud-float") 
-    : "";
-
-  const finalClassName = cn(className, animationClass);
-
-  let IconComponent: React.ComponentType<LucideProps> = Sun;
+  let IconComponent: React.ComponentType<LucideProps> = Cloud;
+  let animationClass = "";
 
   if (iconName.includes("clear")) {
     IconComponent = Sun;
+    animationClass = "gsap-sun";
   } else if (iconName.includes("cloud")) {
     IconComponent = Cloud;
+    animationClass = "gsap-cloud";
   } else if (iconName.includes("rain")) {
     IconComponent = CloudRain;
+    animationClass = "gsap-cloud";
   } else if (iconName.includes("snow")) {
     IconComponent = CloudSnow;
+    animationClass = "gsap-cloud";
   } else if (iconName.includes("mist") || iconName.includes("fog")) {
     IconComponent = CloudFog;
+    animationClass = "gsap-cloud";
+  } else {
+    // Fallback for other conditions
+    IconComponent = Cloud;
+    animationClass = "gsap-cloud";
   }
   
-  return <IconComponent className={finalClassName} />;
+  return <IconComponent className={cn(className, animationClass)} />;
 }
