@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Cloud, Search, MapPin, Loader2, LocateFixed } from "lucide-react";
-import { gsap } from "gsap";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -38,6 +37,7 @@ export default function Home() {
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
   const [isSuggesting, setIsSuggesting] = useState(false);
@@ -63,6 +63,7 @@ export default function Home() {
     }
     
     handleSearch("London", true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Day/Night theme effect
@@ -130,12 +131,14 @@ export default function Home() {
         localStorage.setItem("weatherSearchHistory", JSON.stringify(newHistory));
       }
     }
-    setIsLoading(false);
+    if (isInitialLoad) setIsLoading(false);
+    setIsSearching(false);
   };
 
   const handleSearch = async (city: string, isInitialLoad = false) => {
     setSuggestions([]);
-    setIsLoading(true);
+    if (isInitialLoad) setIsLoading(true);
+    setIsSearching(true);
     setError(null);
     
     const result = await getWeather(city);
@@ -143,7 +146,7 @@ export default function Home() {
   };
 
   const handleSearchByCoords = async (lat: number, lon: number) => {
-    setIsLoading(true);
+    setIsSearching(true);
     setError(null);
     const result = await getWeatherByCoords(lat, lon);
     processSearchResult(result, `${lat},${lon}`);
@@ -155,7 +158,7 @@ export default function Home() {
       return;
     }
     
-    setIsLoading(true);
+    setIsSearching(true);
     setError(null);
 
     navigator.geolocation.getCurrentPosition(
@@ -163,7 +166,7 @@ export default function Home() {
         handleSearchByCoords(position.coords.latitude, position.coords.longitude);
       },
       () => {
-        setIsLoading(false);
+        setIsSearching(false);
         toast({ variant: "destructive", title: "Error de ubicación", description: "No se pudo obtener tu ubicación. Por favor, habilita los permisos de ubicación en tu navegador." });
         setError("No se pudo acceder a tu ubicación. Por favor, permite el acceso e inténtalo de nuevo.");
       }
@@ -188,7 +191,7 @@ export default function Home() {
       <aside className="w-full shrink-0 space-y-6 border-b bg-card p-4 lg:w-96 lg:border-b-0 lg:border-r">
         <div className="space-y-2 text-center">
             <h1 className="font-headline text-3xl font-bold tracking-tight text-primary">
-                WeatherWise
+                Weathery
             </h1>
             <p className="text-muted-foreground">Tu amigable app del tiempo</p>
         </div>
@@ -237,15 +240,15 @@ export default function Home() {
               )}
             />
             <div className="flex flex-col sm:flex-row gap-2">
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
+              <Button type="submit" className="w-full" disabled={isSearching}>
+                {isSearching ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                     <Search className="mr-2 h-4 w-4" />
                 )}
-                {isLoading ? "Buscando..." : "Buscar"}
+                {isSearching ? "Buscando..." : "Buscar"}
               </Button>
-               <Button type="button" variant="outline" onClick={handleGeolocation} disabled={isLoading} className="w-full sm:w-auto px-4">
+               <Button type="button" variant="outline" onClick={handleGeolocation} disabled={isSearching} className="w-full sm:w-auto px-4">
                 <LocateFixed className="h-4 w-4" />
                 <span className="sr-only sm:not-sr-only sm:ml-2">Mi Ubicación</span>
               </Button>
@@ -253,14 +256,14 @@ export default function Home() {
           </form>
         </Form>
 
-        <PopularCities onSearch={handleSearch} disabled={isLoading} />
-        <PopularCountries onSearch={handleSearch} disabled={isLoading} />
-        <SearchHistory history={searchHistory} onSearch={handleSearch} disabled={isLoading} />
+        <PopularCities onSearch={handleSearch} disabled={isSearching} />
+        <PopularCountries onSearch={handleSearch} disabled={isSearching} />
+        <SearchHistory history={searchHistory} onSearch={handleSearch} disabled={isSearching} />
       </aside>
 
       <main className="flex-1 p-4 sm:p-6 md:p-8">
         <div className="h-full w-full max-w-4xl mx-auto space-y-6">
-          {isLoading && !weatherData ? (
+          {isLoading ? (
             <>
               <WeatherCardSkeleton />
               <ForecastDisplaySkeleton />

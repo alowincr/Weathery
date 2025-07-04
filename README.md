@@ -1,4 +1,4 @@
-# WeatherWise: A Modern Weather Application
+# Weathery: A Modern Weather Application
 
 This is a feature-rich weather application built with Next.js, TypeScript, and Tailwind CSS in Firebase Studio. It provides real-time weather data, forecasts, and a dynamic, user-friendly interface.
 
@@ -22,6 +22,7 @@ This is a feature-rich weather application built with Next.js, TypeScript, and T
 -   **Language**: TypeScript
 -   **Styling**: Tailwind CSS
 -   **UI Components**: ShadCN/UI
+-   **Animations**: GSAP
 -   **AI**: Genkit (Available for future AI features)
 -   **Data Fetching**: OpenWeatherMap API
 
