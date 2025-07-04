@@ -1,12 +1,12 @@
 # Weathery: A Modern Weather Application
 
-This is a feature-rich weather application built with Next.js, TypeScript, and Tailwind CSS in Firebase Studio. It provides real-time weather data, forecasts, and a dynamic, user-friendly interface.
+This is a feature-rich weather application built with Next.js, TypeScript, and Tailwind CSS in Firebase Studio. It provides real-time weather data, forecasts, and a dynamic, user-friendly interface with smooth animations.
 
 ## ✨ Features
 
 -   **Real-Time Weather Data**: Get current weather information for any city worldwide using the OpenWeatherMap API.
 -   **Detailed Information**: Displays temperature, weather description, humidity, wind speed, cloudiness, pressure, visibility, and local time.
--   **5-Day Forecast**: Shows the expected maximum and minimum temperatures for the next five days.
+-   **5-Day Forecast**: Shows the expected maximum and minimum temperatures for the next five days with animated weather icons.
 -   **Hourly Forecast**: An interactive chart displaying the temperature trend for the next 24 hours.
 -   **Geolocation**: Instantly get the weather for your current location with a single click.
 -   **Dynamic Day/Night Theme**: The application's color scheme and background gradient change automatically based on whether it's daytime or nighttime in the selected city.
@@ -15,6 +15,7 @@ This is a feature-rich weather application built with Next.js, TypeScript, and T
 -   **Search History**: Remembers your last 5 searches for quick access.
 -   **Responsive Design**: A beautiful and functional UI that works seamlessly on desktop, tablets, and mobile devices.
 -   **Secure API Key Handling**: All API requests are handled on the server-side, ensuring your API key is never exposed to the client.
+-   **Polished Animations**: Smooth transitions and animations powered by GSAP and Tailwind CSS make the user experience more engaging.
 
 ## 🛠️ Tech Stack
 

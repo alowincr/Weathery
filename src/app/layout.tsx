@@ -3,8 +3,11 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'Weathery',
-  description: 'A modern weather app to get the current forecast.',
+  title: {
+    default: "Weathery",
+    template: "%s | Weathery",
+  },
+  description: 'Una aplicación meteorológica moderna construida con Next.js para obtener el pronóstico actual, pronósticos de 5 días y datos detallados del clima para cualquier ciudad del mundo.',
 };
 
 export default function RootLayout({
