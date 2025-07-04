@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Cloud, Search, MapPin, Loader2, LocateFixed } from "lucide-react";
+import { gsap } from "gsap";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -112,7 +113,7 @@ export default function Home() {
         title: "Error",
         description: result.error,
       });
-      if (!isInitialLoad) setWeatherData(null);
+      if (isInitialLoad) setWeatherData(null);
     } else if (result.data) {
       setError(null);
       suggestionSelectedRef.current = true;
@@ -136,9 +137,6 @@ export default function Home() {
     setSuggestions([]);
     setIsLoading(true);
     setError(null);
-    if (!isInitialLoad) {
-      setWeatherData(null);
-    }
     
     const result = await getWeather(city);
     processSearchResult(result, city, isInitialLoad);
@@ -147,7 +145,6 @@ export default function Home() {
   const handleSearchByCoords = async (lat: number, lon: number) => {
     setIsLoading(true);
     setError(null);
-    setWeatherData(null);
     const result = await getWeatherByCoords(lat, lon);
     processSearchResult(result, `${lat},${lon}`);
   }
@@ -159,7 +156,6 @@ export default function Home() {
     }
     
     setIsLoading(true);
-    setWeatherData(null);
     setError(null);
 
     navigator.geolocation.getCurrentPosition(
@@ -242,8 +238,12 @@ export default function Home() {
             />
             <div className="flex flex-col sm:flex-row gap-2">
               <Button type="submit" className="w-full" disabled={isLoading}>
-                <Search className="mr-2 h-4 w-4" />
-                {isLoading && !weatherData ? "Buscando..." : "Buscar"}
+                {isLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <Search className="mr-2 h-4 w-4" />
+                )}
+                {isLoading ? "Buscando..." : "Buscar"}
               </Button>
                <Button type="button" variant="outline" onClick={handleGeolocation} disabled={isLoading} className="w-full sm:w-auto px-4">
                 <LocateFixed className="h-4 w-4" />
@@ -260,7 +260,7 @@ export default function Home() {
 
       <main className="flex-1 p-4 sm:p-6 md:p-8">
         <div className="h-full w-full max-w-4xl mx-auto space-y-6">
-          {isLoading ? (
+          {isLoading && !weatherData ? (
             <>
               <WeatherCardSkeleton />
               <ForecastDisplaySkeleton />
@@ -275,7 +275,7 @@ export default function Home() {
               <WeatherDetails data={weatherData} />
             </>
           ) : error ? (
-            <div className="flex h-[60vh] flex-col items-center justify-center rounded-lg border-2 border-dashed bg-card p-8 text-center">
+            <div className="flex h-[60vh] flex-col items-center justify-center rounded-lg border-2 border-dashed bg-card p-8 text-center animate-in fade-in-50">
               <Cloud className="h-16 w-16 text-muted-foreground" />
               <p className="mt-4 font-medium text-destructive">
                 {error}
@@ -285,7 +285,7 @@ export default function Home() {
               </p>
             </div>
           ) : (
-            <div className="flex h-[60vh] flex-col items-center justify-center rounded-lg border-2 border-dashed bg-card p-8 text-center">
+             <div className="flex h-[60vh] flex-col items-center justify-center rounded-lg border-2 border-dashed bg-card p-8 text-center animate-in fade-in-50">
               <Cloud className="h-16 w-16 text-muted-foreground" />
               <p className="mt-4 font-medium text-muted-foreground">
                 Busca una ciudad para ver el pronóstico del tiempo.
