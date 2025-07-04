@@ -14,7 +14,7 @@ interface PopularCitiesProps {
   disabled?: boolean;
 }
 
-const cities = ["San Francisco", "New York", "Boston", "Houston", "Lima", "Paris"];
+const cities = ["Tokyo", "London", "New York", "Paris", "Dubai", "Singapore"];
 
 export function PopularCities({ onSearch, disabled }: PopularCitiesProps) {
   return (
