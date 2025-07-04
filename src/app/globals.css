@@ -58,11 +58,13 @@
 @layer base {
   * {
     @apply border-border;
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 300ms;
   }
   body {
     @apply text-foreground;
     background-image: linear-gradient(to bottom, hsl(var(--background-gradient-start)), hsl(var(--background-gradient-end)));
     background-attachment: fixed;
-    transition: background-image 0.5s ease-in-out;
   }
 }

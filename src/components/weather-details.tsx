@@ -18,8 +18,8 @@ const formatTime = (timestamp: number, timezone: number) => {
   });
 }
 
-const DetailItem = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: string }) => (
-    <div className="flex items-center gap-4 rounded-xl bg-card p-4 shadow-sm transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md dark:bg-white/5 dark:hover:bg-white/10">
+const DetailItem = ({ icon, label, value, style }: { icon: React.ReactNode, label: string, value: string, style?: React.CSSProperties }) => (
+    <div style={style} className="flex items-center gap-4 rounded-xl bg-card p-4 shadow-sm transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md dark:bg-white/5 dark:hover:bg-white/10 animate-in fade-in slide-in-from-bottom-5">
         <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
             {icon}
         </div>
@@ -43,13 +43,13 @@ export function WeatherDetails({ data }: WeatherDetailsProps) {
     { icon: <Sunset size={28} />, label: "Atardecer", value: formatTime(data.sunset, data.timezone) },
   ]
   return (
-    <Card className="w-full animate-in fade-in-50 duration-700">
+    <Card className="w-full animate-in fade-in-50 slide-in-from-bottom-5 duration-700">
       <CardHeader>
         <CardTitle>Detalles del Clima</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            {details.map(item => <DetailItem key={item.label} {...item} />)}
+            {details.map((item, index) => <DetailItem key={item.label} {...item} style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'backwards' }} />)}
         </div>
       </CardContent>
     </Card>

@@ -217,7 +217,7 @@ export default function Home() {
                     </FormControl>
                     {isSuggesting && <Loader2 className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-muted-foreground" />}
                     {suggestions.length > 0 && (
-                      <Card className="absolute top-full z-10 mt-1 w-full border bg-popover shadow-lg">
+                      <Card className="absolute top-full z-10 mt-1 w-full border bg-popover shadow-lg animate-in fade-in-0 zoom-in-95">
                         <CardContent className="p-1">
                           <ul className="space-y-1">
                             {suggestions.map((s, i) => (

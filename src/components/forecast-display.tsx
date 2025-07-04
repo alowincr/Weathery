@@ -11,14 +11,18 @@ interface ForecastDisplayProps {
 
 export function ForecastDisplay({ forecast }: ForecastDisplayProps) {
   return (
-    <Card className="w-full animate-in fade-in-50 duration-700">
+    <Card className="w-full animate-in fade-in-50 slide-in-from-bottom-5 duration-700">
       <CardHeader>
         <CardTitle>Pronóstico para 5 días</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex gap-2 overflow-x-auto pb-2 md:grid md:grid-cols-5 md:gap-4 md:overflow-visible md:pb-0">
           {forecast.map((dayForecast, index) => (
-            <div key={index} className="flex flex-col items-center justify-center space-y-2 flex-shrink-0 w-28 rounded-lg bg-background p-3 text-center transition-colors hover:bg-accent/50 md:w-auto">
+            <div 
+              key={index} 
+              className="flex flex-col items-center justify-center space-y-2 flex-shrink-0 w-28 rounded-lg bg-background p-3 text-center transition-colors hover:bg-accent/50 md:w-auto animate-in fade-in slide-in-from-bottom-5"
+              style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'backwards' }}
+            >
               <span className="text-sm font-medium capitalize text-muted-foreground">{dayForecast.day.replace('.', '')}</span>
               <WeatherIcon icon={dayForecast.icon} className="h-10 w-10 text-primary" />
               <div className="font-bold">

@@ -20,7 +20,7 @@ export function HourlyForecast({ data }: HourlyForecastProps) {
   }
 
   return (
-    <Card className="w-full animate-in fade-in-50 duration-700">
+    <Card className="w-full animate-in fade-in-50 slide-in-from-bottom-5 duration-700">
       <CardHeader>
         <CardTitle>Pronóstico por Hora (24h)</CardTitle>
       </CardHeader>

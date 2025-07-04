@@ -35,7 +35,7 @@ const getLocalTime = (dt: number, timezone: number) => {
 
 export function WeatherCard({ data }: WeatherCardProps) {
   return (
-    <Card className="w-full animate-in fade-in-50 duration-700">
+    <Card className="w-full animate-in fade-in-50 slide-in-from-bottom-5 duration-700">
       <CardHeader className="text-center">
         <CardTitle className="text-5xl font-bold">{data.city}</CardTitle>
         <CardDescription className="text-lg capitalize">{data.description}</CardDescription>
