@@ -37,7 +37,7 @@ export function WeatherCard({ data }: WeatherCardProps) {
   return (
     <Card className="w-full animate-in fade-in-50 slide-in-from-bottom-5 duration-700">
       <CardHeader className="text-center">
-        <CardTitle className="text-5xl font-bold">{data.city}</CardTitle>
+        <CardTitle className="text-4xl font-bold md:text-5xl">{data.city}</CardTitle>
         <CardDescription className="text-lg capitalize">{data.description}</CardDescription>
         <div className="flex flex-col items-center justify-center gap-1 pt-2 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
@@ -50,9 +50,9 @@ export function WeatherCard({ data }: WeatherCardProps) {
       <CardContent>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8 text-center">
           <WeatherIcon icon={data.icon} className="h-36 w-36 text-primary drop-shadow-lg" />
-          <div className="font-headline text-8xl font-extrabold tracking-tighter">
+          <div className="font-headline text-7xl font-extrabold tracking-tighter md:text-8xl">
             {Math.round(data.temperature)}°
-            <span className="text-7xl align-super font-semibold text-muted-foreground/80">C</span>
+            <span className="align-super font-semibold text-muted-foreground/80 text-6xl md:text-7xl">C</span>
           </div>
         </div>
       </CardContent>
