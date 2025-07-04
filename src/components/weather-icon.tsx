@@ -1,23 +1,34 @@
-import { Sun, Cloud, CloudRain, CloudSnow, CloudFog } from "lucide-react";
+import { Sun, Cloud, CloudRain, CloudSnow, CloudFog, LucideProps } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-export function WeatherIcon({ icon, className }: { icon: string, className?: string }) {
+interface WeatherIconProps {
+  icon: string;
+  className?: string;
+  isAnimated?: boolean;
+}
+
+export function WeatherIcon({ icon, className, isAnimated = false }: WeatherIconProps) {
   const iconName = icon.toLowerCase();
 
+  const animationClass = isAnimated 
+    ? (iconName.includes("clear") ? "animate-sun-rotate" : "animate-cloud-float") 
+    : "";
+
+  const finalClassName = cn(className, animationClass);
+
+  let IconComponent: React.ComponentType<LucideProps> = Sun;
+
   if (iconName.includes("clear")) {
-    return <Sun className={className} />;
-  }
-  if (iconName.includes("cloud")) {
-    return <Cloud className={className} />;
-  }
-  if (iconName.includes("rain")) {
-    return <CloudRain className={className} />;
-  }
-  if (iconName.includes("snow")) {
-    return <CloudSnow className={className} />;
-  }
-  if (iconName.includes("mist") || iconName.includes("fog")) {
-    return <CloudFog className={className} />;
+    IconComponent = Sun;
+  } else if (iconName.includes("cloud")) {
+    IconComponent = Cloud;
+  } else if (iconName.includes("rain")) {
+    IconComponent = CloudRain;
+  } else if (iconName.includes("snow")) {
+    IconComponent = CloudSnow;
+  } else if (iconName.includes("mist") || iconName.includes("fog")) {
+    IconComponent = CloudFog;
   }
   
-  return <Sun className={className} />;
+  return <IconComponent className={finalClassName} />;
 }

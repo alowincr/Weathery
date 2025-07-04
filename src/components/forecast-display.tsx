@@ -24,7 +24,7 @@ export function ForecastDisplay({ forecast }: ForecastDisplayProps) {
               style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'backwards' }}
             >
               <span className="text-sm font-medium capitalize text-muted-foreground">{dayForecast.day.replace('.', '')}</span>
-              <WeatherIcon icon={dayForecast.icon} className="h-10 w-10 text-primary" />
+              <WeatherIcon icon={dayForecast.icon} className="h-10 w-10 text-primary" isAnimated={true} />
               <div className="font-bold">
                 <span>{Math.round(dayForecast.temp_max)}°</span>
                 <span className="text-muted-foreground"> / {Math.round(dayForecast.temp_min)}°</span>
